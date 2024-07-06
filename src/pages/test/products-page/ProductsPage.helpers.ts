@@ -87,3 +87,29 @@ export async function verifyError(dialog: HTMLElement, error: string) {
 
     await dialogScope.findByText(error);
 }
+
+export async function savePrice(dialog: HTMLElement) {
+    const dialogScope = within(dialog);
+
+    await userEvent.click(
+        dialogScope.getByRole("button", {
+            name: /save/i,
+        })
+    );
+}
+
+export async function verifyPriceAndStatusInRow(index: number, newPrice: string, status: string) {
+    const allRows = await screen.findAllByRole("row");
+
+    const [, ...rows] = allRows;
+
+    const row = rows[index];
+
+    const rowScope = within(row);
+
+    const cells = rowScope.getAllByRole("cell");
+
+    await within(cells[3]).findByText(`$${(+newPrice).toFixed(2)}`);
+
+    await within(cells[4]).findByText(status);
+}
