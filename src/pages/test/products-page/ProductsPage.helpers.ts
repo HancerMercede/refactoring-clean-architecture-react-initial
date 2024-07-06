@@ -72,3 +72,18 @@ export async function verfifyDialogo(dialog: HTMLElement, product: RemoteProduct
 
     expect(dialogScope.getByDisplayValue(product.price));
 }
+
+export async function typePrice(dialog: HTMLElement, price: string) {
+    const dialogScope = await within(dialog);
+
+    const priceTextBox = dialogScope.getByRole("textbox", { name: "Price" });
+
+    await userEvent.clear(priceTextBox);
+    await userEvent.type(priceTextBox, price);
+}
+
+export async function verifyError(dialog: HTMLElement, error: string) {
+    const dialogScope = within(dialog);
+
+    await dialogScope.findByText(error);
+}

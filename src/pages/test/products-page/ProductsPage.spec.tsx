@@ -7,7 +7,9 @@ import { MockWebServer } from "../../../tests/MockWebServer";
 import { givenAProducts, givenProducts, givenThereAreNotProducts } from "./productsPage.fixture";
 import {
     openDialogToEditPrice,
+    typePrice,
     verfifyDialogo,
+    verifyError,
     verifyHeader,
     verifyRows,
     waitToTableIsLoaded,
@@ -68,6 +70,42 @@ describe("Edit price", () => {
         const dialog = await openDialogToEditPrice(0);
 
         verfifyDialogo(dialog, products[0]);
+    });
+
+    test("Show an error message for negative prices", async () => {
+        givenProducts(mockWebServer);
+
+        renderComponent(<ProductsPage />);
+        await waitToTableIsLoaded();
+
+        const dialog = await openDialogToEditPrice(0);
+
+        await typePrice(dialog, "-4");
+        await verifyError(dialog, "Invalid price format");
+    });
+
+    test("Show an error message for non number prices", async () => {
+        givenProducts(mockWebServer);
+
+        renderComponent(<ProductsPage />);
+        await waitToTableIsLoaded();
+
+        const dialog = await openDialogToEditPrice(0);
+
+        await typePrice(dialog, "nonnumeric");
+        await verifyError(dialog, "Only numbers are allowed");
+    });
+
+    test("Show an error message for prices greater than maximun", async () => {
+        givenProducts(mockWebServer);
+
+        renderComponent(<ProductsPage />);
+        await waitToTableIsLoaded();
+
+        const dialog = await openDialogToEditPrice(0);
+
+        await typePrice(dialog, "10000");
+        await verifyError(dialog, "The max possible price is 999.99");
     });
 });
 
