@@ -5,7 +5,13 @@ import { AppProvider } from "../../../context/AppProvider";
 import { ReactNode } from "react";
 import { MockWebServer } from "../../../tests/MockWebServer";
 import { givenAProducts, givenProducts, givenThereAreNotProducts } from "./productsPage.fixture";
-import { verifyHeader, verifyRows, waitToTableIsLoaded } from "./ProductsPage.helpers";
+import {
+    openDialogToEditPrice,
+    verfifyDialogo,
+    verifyHeader,
+    verifyRows,
+    waitToTableIsLoaded,
+} from "./ProductsPage.helpers";
 
 const mockWebServer = new MockWebServer();
 
@@ -21,7 +27,8 @@ describe("Products Page", () => {
 
         screen.findAllByRole("heading", { name: "Product price updater" });
     });
-
+});
+describe("Table", () => {
     test("should show an empty table if there are not data", async () => {
         givenThereAreNotProducts(mockWebServer);
 
@@ -48,6 +55,19 @@ describe("Products Page", () => {
         verifyHeader(header);
 
         verifyRows(rows, products);
+    });
+});
+
+describe("Edit price", () => {
+    test("Should show a dialog with the product", async () => {
+        const products = givenProducts(mockWebServer);
+
+        renderComponent(<ProductsPage />);
+        await waitToTableIsLoaded();
+
+        const dialog = await openDialogToEditPrice(0);
+
+        verfifyDialogo(dialog, products[0]);
     });
 });
 
