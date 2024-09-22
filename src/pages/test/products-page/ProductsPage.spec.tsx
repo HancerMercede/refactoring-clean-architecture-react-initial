@@ -6,8 +6,10 @@ import { ReactNode } from "react";
 import { MockWebServer } from "../../../tests/MockWebServer";
 import { givenAProducts, givenProducts, givenThereAreNotProducts } from "./productsPage.fixture";
 import {
+    changeToNonAdminUser,
     openDialogToEditPrice,
     savePrice,
+    tryOpenDialogToEditPrice,
     typePrice,
     verfifyDialogo,
     verifyError,
@@ -149,6 +151,19 @@ describe("Edit price", () => {
         await savePrice(dialog);
 
         await verifyPriceAndStatusInRow(0, newPrice, "inactive");
+    });
+
+    test("Should show an error is the user is not admin", async () => {
+        givenAProducts(mockWebServer);
+
+        renderComponent(<ProductsPage />);
+
+        await waitToTableIsLoaded();
+
+        await changeToNonAdminUser();
+        await tryOpenDialogToEditPrice(0);
+
+        await screen.findByText(/only admin users can edit the price of a product/i);
     });
 });
 
