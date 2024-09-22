@@ -16,6 +16,7 @@ import {
     verifyHeader,
     verifyPriceAndStatusInRow,
     verifyRows,
+    verifySaveIsDisable,
     waitToTableIsLoaded,
 } from "./ProductsPage.helpers";
 
@@ -88,6 +89,8 @@ describe("Edit price", () => {
         await typePrice(dialog, "-4");
 
         await verifyError(dialog, "Invalid price format");
+
+        await verifySaveIsDisable(dialog);
     });
 
     test("Should show an error message for non number prices", async () => {
@@ -102,6 +105,8 @@ describe("Edit price", () => {
         await typePrice(dialog, "nonnumeric");
 
         await verifyError(dialog, "Only numbers are allowed");
+
+        await verifySaveIsDisable(dialog);
     });
 
     test("should show an error message for prices greater than maximun", async () => {
@@ -115,6 +120,8 @@ describe("Edit price", () => {
 
         await typePrice(dialog, "10000");
         await verifyError(dialog, "The max possible price is 999.99");
+
+        await verifySaveIsDisable(dialog);
     });
 
     test("Should edit price correctly and mark status as active for a price greater than 0", async () => {
