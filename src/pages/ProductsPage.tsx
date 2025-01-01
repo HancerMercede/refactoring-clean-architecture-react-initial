@@ -8,42 +8,30 @@ import {
 import { Footer } from "../components/Footer";
 import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { useAppContext } from "../context/useAppContext";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
-import { useReload } from "../hooks/useReload";
-import { RemoteProduct, StoreApi } from "../api/StoreApi";
+import { StoreApi } from "../api/StoreApi";
+import { buildProduct, Product, useProducts } from "../hooks/useProducts";
 
 const baseColumn: Partial<GridColDef<Product>> = {
     disableColumnMenu: true,
     sortable: false,
 };
-
 const storeApi = new StoreApi();
-
 export const ProductsPage: React.FC = () => {
     const { currentUser } = useAppContext();
-    const [reloadKey, reload] = useReload();
 
-    const [products, setProducts] = useState<Product[]>([]);
     const [snackBarError, setSnackBarError] = useState<string>();
     const [snackBarSuccess, setSnackBarSuccess] = useState<string>();
 
     const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
-    useEffect(() => {
-        storeApi.getAll().then(response => {
-            console.debug("Reloading", reloadKey);
-
-            const remoteProducts = response as RemoteProduct[];
-
-            const products = remoteProducts.map(buildProduct);
-
-            setProducts(products);
-        });
-    }, [reloadKey]);
-
+    //FIXME: Load the products
+    const { reload, products } = useProducts(storeApi);
+    //FIXME: Load the product
+    //FIXME: User Validation
     const updatingQuantity = useCallback(
         async (id: number) => {
             if (id) {
@@ -66,10 +54,12 @@ export const ProductsPage: React.FC = () => {
         [currentUser]
     );
 
+    //FIXME: Close dialog
     const cancelEditPrice = useCallback(() => {
         setEditingProduct(undefined);
     }, []);
 
+    //FIXME: Price validation
     function handleChangePrice(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
         if (!editingProduct) return;
 
@@ -88,7 +78,7 @@ export const ProductsPage: React.FC = () => {
             }
         }
     }
-
+    // FIXME: Save price
     async function saveEditPrice(): Promise<void> {
         if (editingProduct) {
             const remoteProduct = await storeApi.get(editingProduct.id);
@@ -117,7 +107,7 @@ export const ProductsPage: React.FC = () => {
             }
         }
     }
-
+    //FIXME: Define columns
     const columns: GridColDef<Product>[] = useMemo(
         () => [
             { ...baseColumn, field: "id", headerName: "ID", width: 70 },
@@ -267,13 +257,6 @@ const ProductImage = styled.img`
 
 type ProductStatus = "active" | "inactive";
 
-export interface Product {
-    id: number;
-    title: string;
-    image: string;
-    price: string;
-}
-
 const StatusContainer = styled.div<{ status: ProductStatus }>`
     background: ${props => (props.status === "inactive" ? "red" : "green")};
     display: flex;
@@ -284,17 +267,5 @@ const StatusContainer = styled.div<{ status: ProductStatus }>`
     border-radius: 20px;
     width: 100px;
 `;
-
-function buildProduct(remoteProduct: RemoteProduct): Product {
-    return {
-        id: remoteProduct.id,
-        title: remoteProduct.title,
-        image: remoteProduct.image,
-        price: remoteProduct.price.toLocaleString("en-US", {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 2,
-        }),
-    };
-}
 
 const priceRegex = /^\d+(\.\d{1,2})?$/;
