@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { RenderResult, render, screen } from "@testing-library/react";
 import { ProductsPage } from "../../ProductsPage";
-import { AppProvider } from "../../../context/AppProvider";
 import { ReactNode } from "react";
-import { MockWebServer } from "../../../tests/MockWebServer";
+import { MockWebServer } from "../../../../tests/MockWebServer";
+import { AppProvider } from "../../../context/AppProvider";
 import { givenAProducts, givenProducts, givenThereAreNotProducts } from "./productsPage.fixture";
 import {
     changeToNonAdminUser,

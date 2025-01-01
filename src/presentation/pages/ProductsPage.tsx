@@ -9,9 +9,10 @@ import { Footer } from "../components/Footer";
 import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
-import { useAppContext } from "../context/useAppContext";
+
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
-import { StoreApi } from "../api/StoreApi";
+import { StoreApi } from "../../data/api/StoreApi";
+import { useAppContext } from "../context/useAppContext";
 import { buildProduct, Product, useProducts } from "../hooks/useProducts";
 
 const baseColumn: Partial<GridColDef<Product>> = {

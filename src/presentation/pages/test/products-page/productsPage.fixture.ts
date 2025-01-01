@@ -1,4 +1,4 @@
-import { RemoteProduct } from "../../../api/StoreApi";
+import { RemoteProduct } from "../../../data/api/StoreApi";
 import { MockWebServer } from "../../../tests/MockWebServer";
 import productResponse from "./data/productsResponse.json";
 
