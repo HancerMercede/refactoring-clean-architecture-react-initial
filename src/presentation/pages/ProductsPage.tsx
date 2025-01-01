@@ -9,17 +9,22 @@ import { Footer } from "../components/Footer";
 import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
-
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { StoreApi } from "../../data/api/StoreApi";
 import { useAppContext } from "../context/useAppContext";
-import { buildProduct, Product, useProducts } from "../hooks/useProducts";
+import { useProducts } from "../hooks/useProducts";
+import { buildProduct, GetProcductsUseCase } from "../../domain/GetProductsUseCase";
+import { Product } from "../../domain/Product";
 
 const baseColumn: Partial<GridColDef<Product>> = {
     disableColumnMenu: true,
     sortable: false,
 };
 const storeApi = new StoreApi();
+
+function createProductsUseCase(): GetProcductsUseCase {
+    return new GetProcductsUseCase(storeApi);
+}
 export const ProductsPage: React.FC = () => {
     const { currentUser } = useAppContext();
 
@@ -29,8 +34,9 @@ export const ProductsPage: React.FC = () => {
     const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
-    //FIXME: Load the products
-    const { reload, products } = useProducts(storeApi);
+    const getProductsUseCase = useMemo(() => createProductsUseCase(), []);
+
+    const { reload, products } = useProducts(getProductsUseCase);
     //FIXME: Load the product
     //FIXME: User Validation
     const updatingQuantity = useCallback(
