@@ -10,26 +10,15 @@ import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
-import { StoreApi } from "../../data/api/StoreApi";
 import { useProducts } from "../hooks/useProducts";
-import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
 import { Product } from "../../domain/Product";
-import { ProductApiRepository } from "../../data/api/ProductApiRepository";
-import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
+import { CompositionRoot } from "../../CompositionRoot";
 
 const baseColumn: Partial<GridColDef<Product>> = {
     disableColumnMenu: true,
     sortable: false,
 };
-const storeApi = new StoreApi();
-const repository = new ProductApiRepository(storeApi);
-function createProductsUseCase(): GetProcductsUseCase {
-    return new GetProcductsUseCase(repository);
-}
 
-function createProductByIdUseCase(): GetProcductByIdUseCase {
-    return new GetProcductByIdUseCase(repository);
-}
 export const ProductsPage: React.FC = () => {
     /**
      * @deprecated user error returned in usePorducts instead of snackBarError
@@ -40,8 +29,14 @@ export const ProductsPage: React.FC = () => {
 
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
-    const getProductsUseCase = useMemo(() => createProductsUseCase(), []);
-    const getProductByIdUseCase = useMemo(() => createProductByIdUseCase(), []);
+    const getProductsUseCase = useMemo(
+        () => CompositionRoot.getInstance().provideGetProductsUseCase(),
+        []
+    );
+    const getProductByIdUseCase = useMemo(
+        () => CompositionRoot.getInstance().provideGetProductByIdUseCase(),
+        []
+    );
 
     const {
         reload,
@@ -77,7 +72,9 @@ export const ProductsPage: React.FC = () => {
     // FIXME: Save price
     async function saveEditPrice(): Promise<void> {
         if (editingProduct) {
-            const remoteProduct = await storeApi.get(editingProduct.id);
+            const remoteProduct = await CompositionRoot.getInstance()
+                .provideStoreApi()
+                .get(editingProduct.id);
 
             if (!remoteProduct) return;
 
@@ -87,7 +84,7 @@ export const ProductsPage: React.FC = () => {
             };
 
             try {
-                await storeApi.post(editedRemoteProduct);
+                await CompositionRoot.getInstance().provideStoreApi().post(editedRemoteProduct);
 
                 setSnackBarSuccess(
                     `Price ${editingProduct.price} for '${editingProduct.title}' updated`
