@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useReload } from "./useReload";
 import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
 import { Product } from "../../domain/Product";
-import { StoreApi } from "../../data/api/StoreApi";
 import { useAppContext } from "../context/useAppContext";
-import { buildProduct } from "../../data/api/ProductApiRepository";
+import { GetProcductByIdUseCase, ResourceNotFound } from "../../domain/GetProductByIdUseCase";
 
-export function useProducts(_getProductsUseCase: GetProcductsUseCase, store: StoreApi) {
+export function useProducts(
+    _getProductsUseCase: GetProcductsUseCase,
+    getProcductByIdUseCase: GetProcductByIdUseCase
+) {
     const [reloadKey, reload] = useReload();
 
     const [products, setProducts] = useState<Product[]>([]);
@@ -16,6 +18,7 @@ export function useProducts(_getProductsUseCase: GetProcductsUseCase, store: Sto
     const { currentUser } = useAppContext();
 
     const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
+
     useEffect(() => {
         _getProductsUseCase.Execute().then(products => {
             console.debug("Reloading", reloadKey);
@@ -31,19 +34,19 @@ export function useProducts(_getProductsUseCase: GetProcductsUseCase, store: Sto
                     setError("Only admin users can edit the price of a product");
                     return;
                 }
-
-                store
-                    .get(id)
-                    .then(buildProduct)
-                    .then(product => {
-                        setEditingProduct(product);
-                    })
-                    .catch(() => {
-                        setError(`Product with id ${id} not found`);
-                    });
+                try {
+                    const product = await getProcductByIdUseCase.Execute(id);
+                    setEditingProduct(product);
+                } catch (error) {
+                    if (error instanceof ResourceNotFound) {
+                        setError(error.message);
+                    } else {
+                        setError("Unexpected error has occurred: ");
+                    }
+                }
             }
         },
-        [currentUser, store]
+        [currentUser, getProcductByIdUseCase]
     );
 
     const cancelEditPrice = useCallback(() => {

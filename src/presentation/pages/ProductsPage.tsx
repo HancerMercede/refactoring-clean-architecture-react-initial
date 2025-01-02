@@ -15,6 +15,7 @@ import { useProducts } from "../hooks/useProducts";
 import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
 import { Product } from "../../domain/Product";
 import { ProductApiRepository } from "../../data/api/ProductApiRepository";
+import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
 
 const baseColumn: Partial<GridColDef<Product>> = {
     disableColumnMenu: true,
@@ -25,6 +26,10 @@ const storeApi = new StoreApi();
 function createProductsUseCase(): GetProcductsUseCase {
     const repository = new ProductApiRepository(storeApi);
     return new GetProcductsUseCase(repository);
+}
+
+function createProductByIdUseCase(): GetProcductByIdUseCase {
+    return new GetProcductByIdUseCase(storeApi);
 }
 export const ProductsPage: React.FC = () => {
     /**
@@ -37,6 +42,7 @@ export const ProductsPage: React.FC = () => {
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
     const getProductsUseCase = useMemo(() => createProductsUseCase(), []);
+    const getProductByIdUseCase = useMemo(() => createProductByIdUseCase(), []);
 
     const {
         reload,
@@ -46,7 +52,7 @@ export const ProductsPage: React.FC = () => {
         setEditingProduct,
         error,
         cancelEditPrice,
-    } = useProducts(getProductsUseCase, storeApi);
+    } = useProducts(getProductsUseCase, getProductByIdUseCase);
 
     useEffect(() => setSnackBarError(error), [error]);
 
