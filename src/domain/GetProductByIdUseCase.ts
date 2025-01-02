@@ -1,16 +1,14 @@
-import { buildProduct } from "../data/api/ProductApiRepository";
-import { StoreApi } from "../data/api/StoreApi";
-
-export class ResourceNotFound extends Error {}
+import { IProductRepository, ResourceNotFound } from "./IProductRepository";
+import { Product } from "./Product";
 
 export class GetProcductByIdUseCase {
-    constructor(private storeApi: StoreApi) {}
+    constructor(private producRepository: IProductRepository) {}
 
-    async Execute(id: number) {
+    async Execute(id: number): Promise<Product> {
         try {
-            const remoteProduct = await this.storeApi.get(id);
+            const product = await this.producRepository.getById(id);
 
-            return buildProduct(remoteProduct);
+            return product;
         } catch (error) {
             throw new ResourceNotFound(`Product with id ${id} not found`);
         }

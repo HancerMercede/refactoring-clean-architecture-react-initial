@@ -22,14 +22,13 @@ const baseColumn: Partial<GridColDef<Product>> = {
     sortable: false,
 };
 const storeApi = new StoreApi();
-
+const repository = new ProductApiRepository(storeApi);
 function createProductsUseCase(): GetProcductsUseCase {
-    const repository = new ProductApiRepository(storeApi);
     return new GetProcductsUseCase(repository);
 }
 
 function createProductByIdUseCase(): GetProcductByIdUseCase {
-    return new GetProcductByIdUseCase(storeApi);
+    return new GetProcductByIdUseCase(repository);
 }
 export const ProductsPage: React.FC = () => {
     /**

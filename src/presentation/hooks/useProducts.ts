@@ -3,7 +3,8 @@ import { useReload } from "./useReload";
 import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
 import { Product } from "../../domain/Product";
 import { useAppContext } from "../context/useAppContext";
-import { GetProcductByIdUseCase, ResourceNotFound } from "../../domain/GetProductByIdUseCase";
+import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
+import { ResourceNotFound } from "../../domain/IProductRepository";
 
 export function useProducts(
     _getProductsUseCase: GetProcductsUseCase,

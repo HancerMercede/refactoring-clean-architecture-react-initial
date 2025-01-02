@@ -4,13 +4,20 @@ import { RemoteProduct, StoreApi } from "./StoreApi";
 
 export class ProductApiRepository implements IProductRepository {
     constructor(private storeApi: StoreApi) {}
+
     async getAll(): Promise<Product[]> {
         const remoteProducts = await this.storeApi.getAll();
 
         return remoteProducts.map(buildProduct);
     }
+
+    async getById(id: number): Promise<Product> {
+        const remoteProduct = await this.storeApi.get(id);
+
+        return buildProduct(remoteProduct);
+    }
 }
-export function buildProduct(remoteProduct: RemoteProduct): Product {
+function buildProduct(remoteProduct: RemoteProduct): Product {
     return {
         id: remoteProduct.id,
         title: remoteProduct.title,
