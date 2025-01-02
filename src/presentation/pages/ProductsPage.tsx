@@ -8,14 +8,13 @@ import {
 import { Footer } from "../components/Footer";
 import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
-import { ChangeEvent, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { StoreApi } from "../../data/api/StoreApi";
-import { useAppContext } from "../context/useAppContext";
 import { useProducts } from "../hooks/useProducts";
 import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
 import { Product } from "../../domain/Product";
-import { buildProduct, ProductApiRepository } from "../../data/api/ProductApiRepository";
+import { ProductApiRepository } from "../../data/api/ProductApiRepository";
 
 const baseColumn: Partial<GridColDef<Product>> = {
     disableColumnMenu: true,
@@ -28,45 +27,28 @@ function createProductsUseCase(): GetProcductsUseCase {
     return new GetProcductsUseCase(repository);
 }
 export const ProductsPage: React.FC = () => {
-    const { currentUser } = useAppContext();
-
+    /**
+     * @deprecated user error returned in usePorducts instead of snackBarError
+     */
     const [snackBarError, setSnackBarError] = useState<string>();
+
     const [snackBarSuccess, setSnackBarSuccess] = useState<string>();
 
-    const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
     const getProductsUseCase = useMemo(() => createProductsUseCase(), []);
 
-    const { reload, products } = useProducts(getProductsUseCase);
-    //FIXME: Load the product
-    //FIXME: User Validation
-    const updatingQuantity = useCallback(
-        async (id: number) => {
-            if (id) {
-                if (!currentUser.isAdmin) {
-                    setSnackBarError("Only admin users can edit the price of a product");
-                    return;
-                }
+    const {
+        reload,
+        products,
+        updatingQuantity,
+        editingProduct,
+        setEditingProduct,
+        error,
+        cancelEditPrice,
+    } = useProducts(getProductsUseCase, storeApi);
 
-                storeApi
-                    .get(id)
-                    .then(buildProduct)
-                    .then(product => {
-                        setEditingProduct(product);
-                    })
-                    .catch(() => {
-                        setSnackBarError(`Product with id ${id} not found`);
-                    });
-            }
-        },
-        [currentUser]
-    );
-
-    //FIXME: Close dialog
-    const cancelEditPrice = useCallback(() => {
-        setEditingProduct(undefined);
-    }, []);
+    useEffect(() => setSnackBarError(error), [error]);
 
     //FIXME: Price validation
     function handleChangePrice(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {

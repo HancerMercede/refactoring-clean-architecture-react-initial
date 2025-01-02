@@ -10,7 +10,6 @@ export class ProductApiRepository implements IProductRepository {
         return remoteProducts.map(buildProduct);
     }
 }
-
 export function buildProduct(remoteProduct: RemoteProduct): Product {
     return {
         id: remoteProduct.id,
