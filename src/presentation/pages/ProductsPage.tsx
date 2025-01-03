@@ -50,7 +50,6 @@ export const ProductsPage: React.FC = () => {
 
     useEffect(() => setSnackBarError(error), [error]);
 
-    //FIXME: Price validation
     function handleChangePrice(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
         onChangePrice(event.target.value);
     }
@@ -245,5 +244,3 @@ const StatusContainer = styled.div<{ status: ProductStatus }>`
     border-radius: 20px;
     width: 100px;
 `;
-
-const priceRegex = /^\d+(\.\d{1,2})?$/;
