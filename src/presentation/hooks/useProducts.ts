@@ -7,19 +7,21 @@ import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
 import { ResourceNotFound } from "../../domain/IProductRepository";
 import { Price, ValidationError } from "../../domain/Price";
 
+export type ProductStatus = "active" | "inactive";
+export type ProductViewModel = Product & { status: ProductStatus };
 export function useProducts(
     _getProductsUseCase: GetProcductsUseCase,
     getProcductByIdUseCase: GetProcductByIdUseCase
 ) {
     const [reloadKey, reload] = useReload();
 
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<ProductViewModel[]>([]);
 
     const [error, setError] = useState<string>();
 
     const { currentUser } = useAppContext();
 
-    const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
+    const [editingProduct, setEditingProduct] = useState<ProductViewModel | undefined>(undefined);
 
     const [priceError, setPriceError] = useState<string | undefined>(undefined);
 
@@ -27,7 +29,7 @@ export function useProducts(
         _getProductsUseCase.Execute().then(products => {
             console.debug("Reloading", reloadKey);
 
-            setProducts(products);
+            setProducts(products.map(buildProductViewModel));
         });
     }, [reloadKey, _getProductsUseCase]);
 
@@ -40,7 +42,7 @@ export function useProducts(
                 }
                 try {
                     const product = await getProcductByIdUseCase.Execute(id);
-                    setEditingProduct(product);
+                    setEditingProduct(buildProductViewModel(product));
                 } catch (error) {
                     if (error instanceof ResourceNotFound) {
                         setError(error.message);
@@ -85,5 +87,12 @@ export function useProducts(
         cancelEditPrice,
         onChangePrice,
         priceError,
+    };
+}
+
+function buildProductViewModel(product: Product): ProductViewModel {
+    return {
+        ...product,
+        status: +product.price === 0 ? "inactive" : "active",
     };
 }
