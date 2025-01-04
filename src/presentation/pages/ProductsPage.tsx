@@ -8,26 +8,19 @@ import {
 import { Footer } from "../components/Footer";
 import { MainAppBar } from "../components/MainAppBar";
 import styled from "@emotion/styled";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useMemo } from "react";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { ProductViewModel, useProducts } from "../hooks/useProducts";
 
 import { CompositionRoot } from "../../CompositionRoot";
-import { Product, ProductStatus } from "../../domain/Product";
+import { ProductStatus } from "../../domain/Product";
 
-const baseColumn: Partial<GridColDef<Product>> = {
+const baseColumn: Partial<GridColDef<ProductViewModel>> = {
     disableColumnMenu: true,
     sortable: false,
 };
 
 export const ProductsPage: React.FC = () => {
-    /**
-     * @deprecated user error returned in usePorducts instead of snackBarError
-     */
-    const [snackBarError, setSnackBarError] = useState<string>();
-
-    const [snackBarSuccess, setSnackBarSuccess] = useState<string>();
-
     const getProductsUseCase = useMemo(
         () => CompositionRoot.getInstance().provideGetProductsUseCase(),
         []
@@ -36,54 +29,21 @@ export const ProductsPage: React.FC = () => {
         () => CompositionRoot.getInstance().provideGetProductByIdUseCase(),
         []
     );
-
+    const storeApi = useMemo(() => CompositionRoot.getInstance().provideStoreApi(), []);
     const {
-        reload,
         products,
         updatingQuantity,
         editingProduct,
-        setEditingProduct,
-        error,
+        message,
         cancelEditPrice,
         priceError,
         onChangePrice,
-    } = useProducts(getProductsUseCase, getProductByIdUseCase);
-
-    useEffect(() => setSnackBarError(error), [error]);
+        saveEditPrice,
+        onCloseMessage,
+    } = useProducts(getProductsUseCase, getProductByIdUseCase, storeApi);
 
     function handleChangePrice(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
         onChangePrice(event.target.value);
-    }
-    // FIXME: Save price
-    async function saveEditPrice(): Promise<void> {
-        if (editingProduct) {
-            const remoteProduct = await CompositionRoot.getInstance()
-                .provideStoreApi()
-                .get(editingProduct.id);
-
-            if (!remoteProduct) return;
-
-            const editedRemoteProduct = {
-                ...remoteProduct,
-                price: Number(editingProduct.price),
-            };
-
-            try {
-                await CompositionRoot.getInstance().provideStoreApi().post(editedRemoteProduct);
-
-                setSnackBarSuccess(
-                    `Price ${editingProduct.price} for '${editingProduct.title}' updated`
-                );
-                setEditingProduct(undefined);
-                reload();
-            } catch (error) {
-                setSnackBarSuccess(
-                    `An error has ocurred updating the price ${editingProduct.price} for '${editingProduct.title}'`
-                );
-                setEditingProduct(undefined);
-                reload();
-            }
-        }
     }
 
     const columns: GridColDef<ProductViewModel>[] = useMemo(
@@ -174,20 +134,20 @@ export const ProductsPage: React.FC = () => {
 
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                open={snackBarError !== undefined}
+                open={message !== undefined && message.type === "Error"}
                 autoHideDuration={2000}
-                onClose={() => setSnackBarError(undefined)}
+                onClose={onCloseMessage}
             >
-                <Alert severity="error">{snackBarError}</Alert>
+                <Alert severity="error">{message?.text}</Alert>
             </Snackbar>
 
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                open={snackBarSuccess !== undefined}
+                open={message !== undefined && message.type === "success"}
                 autoHideDuration={2000}
-                onClose={() => setSnackBarSuccess(undefined)}
+                onClose={onCloseMessage}
             >
-                <Alert severity="success">{snackBarSuccess}</Alert>
+                <Alert severity="success">{message?.text}</Alert>
             </Snackbar>
 
             {editingProduct && (

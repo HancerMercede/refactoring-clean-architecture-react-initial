@@ -6,17 +6,21 @@ import { useAppContext } from "../context/useAppContext";
 import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
 import { ResourceNotFound } from "../../domain/IProductRepository";
 import { Price, ValidationError } from "../../domain/Price";
+import { StoreApi } from "../../data/api/StoreApi";
 
 export type ProductViewModel = ProductData & { status: ProductStatus };
+
+type Message = { type: "Error" | "success"; text: string };
 export function useProducts(
     _getProductsUseCase: GetProcductsUseCase,
-    getProcductByIdUseCase: GetProcductByIdUseCase
+    getProcductByIdUseCase: GetProcductByIdUseCase,
+    storeApi: StoreApi
 ) {
     const [reloadKey, reload] = useReload();
 
     const [products, setProducts] = useState<ProductViewModel[]>([]);
 
-    const [error, setError] = useState<string>();
+    const [message, setMessage] = useState<Message>();
 
     const { currentUser } = useAppContext();
 
@@ -36,7 +40,10 @@ export function useProducts(
         async (id: number) => {
             if (id) {
                 if (!currentUser.isAdmin) {
-                    setError("Only admin users can edit the price of a product");
+                    setMessage({
+                        type: "Error",
+                        text: "Only admin users can edit the price of a product",
+                    });
                     return;
                 }
                 try {
@@ -44,9 +51,9 @@ export function useProducts(
                     setEditingProduct(buildProductViewModel(product));
                 } catch (error) {
                     if (error instanceof ResourceNotFound) {
-                        setError(error.message);
+                        setMessage({ type: "Error", text: error.message });
                     } else {
-                        setError("Unexpected error has occurred: ");
+                        setMessage({ type: "Error", text: "Unexpected error has occurred." });
                     }
                 }
             }
@@ -69,12 +76,47 @@ export function useProducts(
             setPriceError(undefined);
         } catch (error) {
             if (error instanceof ValidationError) {
-                setError(error.message);
+                setMessage({ type: "Error", text: error.message });
             } else {
-                setError("Unexpected error has occurred: ");
+                setMessage({ type: "Error", text: "Unexpected error has occurred." });
             }
         }
     }
+
+    async function saveEditPrice(): Promise<void> {
+        if (editingProduct) {
+            const remoteProduct = await storeApi.get(editingProduct.id);
+
+            if (!remoteProduct) return;
+
+            const editedRemoteProduct = {
+                ...remoteProduct,
+                price: Number(editingProduct.price),
+            };
+
+            try {
+                await storeApi.post(editedRemoteProduct);
+
+                setMessage({
+                    type: "success",
+                    text: `Price ${editingProduct.price} for '${editingProduct.title}' updated`,
+                });
+                setEditingProduct(undefined);
+                reload();
+            } catch (error) {
+                setMessage({
+                    type: "Error",
+                    text: `An error has ocurred updating the price ${editingProduct.price} for '${editingProduct.title}'`,
+                });
+                setEditingProduct(undefined);
+                reload();
+            }
+        }
+    }
+
+    const onCloseMessage = useCallback(() => {
+        setMessage(undefined);
+    }, []);
 
     return {
         reload,
@@ -82,10 +124,12 @@ export function useProducts(
         updatingQuantity,
         editingProduct,
         setEditingProduct,
-        error,
+        message,
         cancelEditPrice,
         onChangePrice,
         priceError,
+        saveEditPrice,
+        onCloseMessage,
     };
 }
 
