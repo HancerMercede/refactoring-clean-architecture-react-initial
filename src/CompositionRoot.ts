@@ -2,6 +2,7 @@ import { ProductApiRepository } from "./data/api/ProductApiRepository";
 import { StoreApi } from "./data/api/StoreApi";
 import { GetProcductByIdUseCase } from "./domain/GetProductByIdUseCase";
 import { GetProcductsUseCase } from "./domain/GetProductsUseCase";
+import { UpdateProductPriceUseCase } from "./domain/UpdateProductPriceUseCase";
 
 export class CompositionRoot {
     private constructor() {}
@@ -26,7 +27,7 @@ export class CompositionRoot {
         return new GetProcductByIdUseCase(this.repository);
     }
 
-    provideStoreApi(): StoreApi {
-        return this.storeApi;
+    provideUpdateProductPriceUseCase(): UpdateProductPriceUseCase {
+        return new UpdateProductPriceUseCase(this.repository);
     }
 }

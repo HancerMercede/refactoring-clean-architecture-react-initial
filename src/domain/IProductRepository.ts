@@ -4,4 +4,6 @@ export interface IProductRepository {
     getAll(): Promise<Product[]>;
 
     getById(id: number): Promise<Product>;
+
+    save(product: Product): Promise<void>;
 }

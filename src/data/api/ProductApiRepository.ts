@@ -16,6 +16,18 @@ export class ProductApiRepository implements IProductRepository {
 
         return buildProduct(remoteProduct);
     }
+
+    async save(product: Product): Promise<void> {
+        const remoteProduct = await this.storeApi.get(product.id);
+
+        if (!remoteProduct) return;
+
+        const editedRemoteProduct = {
+            ...remoteProduct,
+            price: Number(product.price.value),
+        };
+        return this.storeApi.post(editedRemoteProduct);
+    }
 }
 function buildProduct(remoteProduct: RemoteProduct): Product {
     return Product.create({
