@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useReload } from "./useReload";
 import { GetProcductsUseCase } from "../../domain/GetProductsUseCase";
-import { Product, ProductData, ProductStatus } from "../../domain/Product";
+import { Product } from "../../domain/Product";
 import { useAppContext } from "../context/useAppContext";
 import { GetProcductByIdUseCase } from "../../domain/GetProductByIdUseCase";
 import { ResourceNotFound } from "../../domain/IProductRepository";
@@ -10,15 +10,13 @@ import {
     ActionNotAllowedError,
     UpdateProductPriceUseCase,
 } from "../../domain/UpdateProductPriceUseCase";
+import { Message, ProductViewModel, useProductsState } from "./useProductsState";
 
-export type ProductViewModel = ProductData & { status: ProductStatus };
-
-type Message = { type: "Error" | "success"; text: string };
 export function useProducts(
     _getProductsUseCase: GetProcductsUseCase,
     getProcductByIdUseCase: GetProcductByIdUseCase,
     UpdateProductPriceUseCase: UpdateProductPriceUseCase
-) {
+): useProductsState {
     const [reloadKey, reload] = useReload();
 
     const [products, setProducts] = useState<ProductViewModel[]>([]);
@@ -68,25 +66,28 @@ export function useProducts(
         setEditingProduct(undefined);
     }, [setEditingProduct]);
 
-    function onChangePrice(price: string): void {
-        if (!editingProduct) return;
+    const onChangePrice = useCallback(
+        (price: string) => {
+            if (!editingProduct) return;
 
-        try {
-            setEditingProduct({ ...editingProduct, price: price });
+            try {
+                setEditingProduct({ ...editingProduct, price: price });
 
-            Price.create(price);
+                Price.create(price);
 
-            setPriceError(undefined);
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                setMessage({ type: "Error", text: error.message });
-            } else {
-                setMessage({ type: "Error", text: "Unexpected error has occurred." });
+                setPriceError(undefined);
+            } catch (error) {
+                if (error instanceof ValidationError) {
+                    setMessage({ type: "Error", text: error.message });
+                } else {
+                    setMessage({ type: "Error", text: "Unexpected error has occurred." });
+                }
             }
-        }
-    }
+        },
+        [editingProduct]
+    );
 
-    async function saveEditPrice(): Promise<void> {
+    const saveEditPrice = useCallback(async () => {
         if (editingProduct) {
             try {
                 await UpdateProductPriceUseCase.Execute(
@@ -117,18 +118,16 @@ export function useProducts(
                 }
             }
         }
-    }
+    }, [UpdateProductPriceUseCase, currentUser, editingProduct, reload]);
 
     const onCloseMessage = useCallback(() => {
         setMessage(undefined);
     }, []);
 
     return {
-        reload,
         products,
         updatingQuantity,
         editingProduct,
-        setEditingProduct,
         message,
         cancelEditPrice,
         onChangePrice,

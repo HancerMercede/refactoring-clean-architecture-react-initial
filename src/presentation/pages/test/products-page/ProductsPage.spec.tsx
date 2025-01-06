@@ -12,11 +12,9 @@ import {
     tryOpenDialogToEditPrice,
     typePrice,
     verfifyDialogo,
-    verifyError,
     verifyHeader,
     verifyPriceAndStatusInRow,
     verifyRows,
-    verifySaveIsDisable,
     waitToTableIsLoaded,
 } from "./ProductsPage.helpers";
 
